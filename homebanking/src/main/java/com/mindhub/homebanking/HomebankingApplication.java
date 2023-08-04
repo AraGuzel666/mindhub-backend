@@ -18,7 +18,7 @@ public class HomebankingApplication {
 	@Bean
 	public CommandLineRunner initData(ClientRepository clientRepository){
 		return (args) -> {
-			Client client = new Client("12341234", "Aram", "Guzelian");
+			Client client = new Client("araguzel66@gmail.com", "Aram", "Guzelian");
 
 			clientRepository.save(client);
 		};
