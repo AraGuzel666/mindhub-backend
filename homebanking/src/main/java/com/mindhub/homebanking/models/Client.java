@@ -1,9 +1,11 @@
 package com.mindhub.homebanking.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -20,8 +22,16 @@ public class Client {
     @OneToMany(mappedBy="client", fetch=FetchType.EAGER)
     Set<Account> accounts = new HashSet<>();
 
+    @JsonIgnore
+    @OneToMany(mappedBy="client", fetch=FetchType.LAZY)
+    private List<ClientLoan> clientLoans;
+
     public Client() {
 
+    }
+    @JsonIgnore
+    public List<ClientLoan> getClientLoans() {
+        return clientLoans;
     }
 
     public Set<Account> getAccount() {

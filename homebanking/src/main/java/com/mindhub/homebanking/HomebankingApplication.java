@@ -1,18 +1,14 @@
 package com.mindhub.homebanking;
 
-import com.mindhub.homebanking.models.Account;
-import com.mindhub.homebanking.models.Client;
-import com.mindhub.homebanking.models.Transaction;
-import com.mindhub.homebanking.models.TransactionType;
-import com.mindhub.homebanking.repositories.AccountRepository;
-import com.mindhub.homebanking.repositories.ClientRepository;
-import com.mindhub.homebanking.repositories.TransactionRepository;
+import com.mindhub.homebanking.models.*;
+import com.mindhub.homebanking.repositories.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 
 @SpringBootApplication
 public class HomebankingApplication {
@@ -23,7 +19,8 @@ public class HomebankingApplication {
 	}
 
 	@Bean
-	public CommandLineRunner initData(ClientRepository clientRepository, AccountRepository accountRepository, TransactionRepository transactionRepository){
+	public CommandLineRunner initData(ClientRepository clientRepository, AccountRepository accountRepository, TransactionRepository transactionRepository, LoanRepository loanRepository,
+									  ClientLoanRepository clientLoanRepository){
 		return (args) -> {
 			LocalDate date = LocalDate.now();
 			Client client = new Client("melba@mindhub.com", "Melba", "Morel");
@@ -57,6 +54,41 @@ public class HomebankingApplication {
 			transactionRepository.save(transaction1);
 			transactionRepository.save(transaction2);
 			transactionRepository.save(transaction3);
+
+
+			Loan hipotecario = new Loan();
+			hipotecario.setName("Hipotecario");
+			hipotecario.setMaxAmount(500000.00);
+			hipotecario.setPayments(Arrays.asList(12, 24, 36, 48, 60));
+
+			Loan personal = new Loan();
+			personal.setName("Personal");
+			personal.setMaxAmount(100000.0);
+			personal.setPayments(Arrays.asList(6, 12, 24));
+
+			Loan automotriz = new Loan();
+			automotriz.setName("Automotriz");
+			automotriz.setMaxAmount(300000.0);
+			automotriz.setPayments(Arrays.asList(6, 12, 24, 36));
+
+			loanRepository.save(hipotecario);
+			loanRepository.save(personal);
+			loanRepository.save(automotriz);
+
+
+			ClientLoan melbaHipotecario = new ClientLoan(400000.0, 60, client, hipotecario);
+			ClientLoan melbaPersonal = new ClientLoan(50000.0, 12, client, personal);
+			ClientLoan aramPersonal = new ClientLoan(100000.00, 24, client2, personal);
+			ClientLoan aramAutomotriz = new ClientLoan(200000.00, 36, client2, automotriz);
+
+
+
+
+			clientLoanRepository.save(melbaHipotecario);
+			clientLoanRepository.save(melbaPersonal);
+			clientLoanRepository.save(aramPersonal);
+			clientLoanRepository.save(aramAutomotriz);
+
 
 		};
 	}
