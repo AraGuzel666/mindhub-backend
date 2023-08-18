@@ -22,14 +22,24 @@ public class Client {
     @OneToMany(mappedBy="client", fetch=FetchType.EAGER)
     Set<Account> accounts = new HashSet<>();
 
-    @JsonIgnore
+    @OneToMany(mappedBy="client", fetch=FetchType.EAGER)
+    Set<Card> cards = new HashSet<>();
     @OneToMany(mappedBy="client", fetch=FetchType.LAZY)
     private List<ClientLoan> clientLoans;
 
     public Client() {
 
     }
-    @JsonIgnore
+
+    public Set<Card> getCards() {
+        return cards;
+    }
+
+    public void addCards(Card card) {
+        card.setClient(this);
+        cards.add(card);
+    }
+
     public List<ClientLoan> getClientLoans() {
         return clientLoans;
     }

@@ -39,7 +39,6 @@ public class Account {
 
     public Account() {
     }
-    @JsonIgnore
     public Client getClient() {
         return client;
     }
