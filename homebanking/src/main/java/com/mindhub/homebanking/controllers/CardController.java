@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -58,8 +59,8 @@ public class CardController {
         newCard.setNumber(generateCardNumber());
         newCard.setCardHolder(client.getFirstName() + " " + client.getLastName());
         newCard.setCvv(generateRandomCvv());
-        newCard.setFromDate(LocalDate.now());
-        newCard.setThruDate(LocalDate.now().plusYears(5));
+        newCard.setFromDate(LocalDateTime.now());
+        newCard.setThruDate(LocalDateTime.now().plusYears(5));
         newCard.setClient(client);
 
         cardRepository.save(newCard);

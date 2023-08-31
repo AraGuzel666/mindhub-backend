@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 
 @SpringBootApplication
@@ -25,7 +26,7 @@ public class HomebankingApplication {
 	public CommandLineRunner initData(ClientRepository clientRepository, AccountRepository accountRepository, TransactionRepository transactionRepository, LoanRepository loanRepository,
 									  ClientLoanRepository clientLoanRepository, CardRepository cardRepository){
 		return (args) -> {
-			LocalDate date = LocalDate.now();
+			LocalDateTime date = LocalDateTime.now();
 			Client client = new Client("melba@mindhub.com", "Melba", "Morel", passwordEncoder.encode("123123"));
 			Client client2 = new Client("araguzel66@gmail.com", "Aram", "Guzelian", passwordEncoder.encode("321321"));
 
@@ -44,9 +45,9 @@ public class HomebankingApplication {
 			accountRepository.save(account2);
 			accountRepository.save(account3);
 
-			Transaction transaction1 = new Transaction(TransactionType.CREDITO, 50000.00, "VARIOS", date);
-			Transaction transaction2 = new Transaction(TransactionType.DEBITO, 50055500.00, "VARIOS", date);
-			Transaction transaction3 = new Transaction(TransactionType.CREDITO, 512340.00, "VARIOS", date);
+			Transaction transaction1 = new Transaction(TransactionType.CREDIT, 50000.00, "VARIOS", date);
+			Transaction transaction2 = new Transaction(TransactionType.DEBIT, 50055500.00, "VARIOS", date);
+			Transaction transaction3 = new Transaction(TransactionType.CREDIT, 512340.00, "VARIOS", date);
 
 			account1.addTransaction(transaction1);
 			account1.addTransaction(transaction2);

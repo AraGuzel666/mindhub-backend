@@ -9,13 +9,13 @@ import com.mindhub.homebanking.repositories.ClientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 import static java.util.stream.Collectors.toList;
@@ -30,12 +30,12 @@ public class AccountController {
     private ClientRepository clientRepository;
 
 
-    @RequestMapping("/accounts")
+    @GetMapping("/accounts")
     public List<AccountDTO> getAccount() {
         return accountRepository.findAll().stream().map(AccountDTO::new).collect(toList());
     }
 
-    @RequestMapping("/accounts/{id}")
+    @GetMapping("/accounts/{id}")
     public AccountDTO getAccount(@PathVariable Long id) {
         return accountRepository.findById(id).map(AccountDTO::new).orElse(null);
     }
@@ -55,13 +55,24 @@ public class AccountController {
             newAccount.setNumber(accountNumber);
             newAccount.setClient(client);
             newAccount.setBalance(0.0);
-            newAccount.setCreationDate(LocalDate.now());
+            newAccount.setCreationDate(LocalDateTime.now());
 
             accountRepository.save(newAccount);
 
             return ResponseEntity.status(HttpStatus.CREATED).body("Cuenta creada exitosamente");
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Cliente no encontrado");
+        }
+    }
+    @GetMapping("/clients/current/accounts")
+    public List<AccountDTO> getCurrentClientAccounts(Authentication authentication) {
+        String currentEmail = authentication.getName();
+        Client currentClient = clientRepository.findByEmail(currentEmail);
+
+        if (currentClient != null) {
+            return currentClient.getAccount().stream().map(AccountDTO::new).collect(toList());
+        } else {
+            return Collections.emptyList();
         }
     }
 

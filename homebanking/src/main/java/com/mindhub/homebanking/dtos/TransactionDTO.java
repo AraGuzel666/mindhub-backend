@@ -4,13 +4,14 @@ import com.mindhub.homebanking.models.Transaction;
 import com.mindhub.homebanking.models.TransactionType;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class TransactionDTO {
     private Long id;
     private TransactionType type;
     private Double amount;
     private String description;
-    private LocalDate date;
+    private LocalDateTime date;
 
     public TransactionDTO(Transaction transaction) {
         this.id = transaction.getId();
@@ -36,7 +37,7 @@ public class TransactionDTO {
         return description;
     }
 
-    public LocalDate getDate() {
+    public LocalDateTime getDate() {
         return date;
     }
 }

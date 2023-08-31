@@ -13,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static java.util.stream.Collectors.toList;
@@ -62,7 +63,7 @@ public class ClientController {
         newAccount.setNumber(accountNumber);
         newAccount.setClient(client);
         newAccount.setBalance(0.0);
-        newAccount.setCreationDate(LocalDate.now());
+        newAccount.setCreationDate(LocalDateTime.now());
 
         accountRepository.save(newAccount);
 
@@ -84,3 +85,5 @@ public class ClientController {
         return clientRepository.findById(id).map(ClientDTO::new).orElse(null);
     }
 }
+
+
