@@ -54,7 +54,7 @@ public class ClientLoan {
     }
 
 
-    @JsonIgnore
+
 
     public Client getClient() {
         return client;

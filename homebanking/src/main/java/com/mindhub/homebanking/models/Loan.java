@@ -33,7 +33,6 @@ public class Loan {
         this.maxAmount = maxAmount;
         this.payments = payments;
     }
-    @JsonIgnore
     public List<ClientLoan> getClientLoans() {
         return clientLoans;
     }
