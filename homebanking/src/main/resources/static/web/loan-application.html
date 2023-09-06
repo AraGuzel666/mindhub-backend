@@ -79,7 +79,7 @@
                                         <select id="type" v-model="loanTypeId" v-on:change="changedType"
                                             class="form-select" aria-label="Default select example" required>
                                             <option value="0">Open this select menu</option>
-                                            <option v-for="loanType in loanTypes" v-bind:value="loanType.loanTypeId">{{
+                                            <option v-for="loanType in loanTypes" v-bind:value="loanType.id">{{
                                                 loanType.name }} | max amount: {{ loanType.maxAmount }}</option>
                                         </select>
                                     </div>
@@ -88,7 +88,7 @@
                                         <select id="payments" v-model="payments" class="form-select"
                                             aria-label="Default select example" required>
                                             <option value="0">Open this select menu</option>
-                                            <option v-for="payments in paymentsList" v-bind:value="payments">{{ payments }}
+                                            <option v-for="payment in paymentsList" v-bind:value="payment">{{ payment }}
                                             </option>
                                         </select>
                                     </div>
