@@ -10,7 +10,7 @@ import java.util.List;
 
 public class LoanDTO {
 
-    private Long id;
+    private Long LoanId;
     private String name;
     private Double maxAmount;
     @ElementCollection
@@ -19,14 +19,14 @@ public class LoanDTO {
     private List<Integer> payments;
 
     public LoanDTO(Loan loan) {
-        this.id = loan.getId();
+        this.LoanId = loan.getId();
         this.maxAmount = loan.getMaxAmount();
         this.payments = loan.getPayments();
         this.name = loan.getName();
     }
 
-    public Long getId() {
-        return id;
+    public Long getLoanId() {
+        return LoanId;
     }
 
     public String getName() {

@@ -40,26 +40,23 @@ public class LoanController {
             Authentication authentication) {
 
         // Verificar que los datos de la solicitud no estén vacíos y sean válidos
-        if (loanApplicationDTO.getAmount() <= 0 || loanApplicationDTO.getPayments() <= 0 ||
-                loanApplicationDTO.getToAccountNumber().isEmpty()) {
+        if (loanApplicationDTO.getAmount() <= 0 || loanApplicationDTO.getPayments() <= 0) {
             return new ResponseEntity<>("Datos de solicitud inválidos", HttpStatus.BAD_REQUEST);
         }
 
-        // Obtener el cliente autenticado
-        String currentEmail = authentication.getName();
-        Client currentClient = clientRepository.findByEmail(currentEmail);
-
-        // Verificar que el cliente esté autenticado
-        if (currentClient == null) {
-            return new ResponseEntity<>("Cliente no autenticado", HttpStatus.UNAUTHORIZED);
+        // Verificar que el préstamo exista
+// Verificar que el préstamo exista
+        Long loanId = loanApplicationDTO.getLoanId();
+        if (loanId == null) {
+            return new ResponseEntity<>("ID de préstamo nulo", HttpStatus.BAD_REQUEST);
         }
 
-        // Verificar que el préstamo exista
-        Optional<Loan> optionalLoan = loanRepository.findById(loanApplicationDTO.getLoanId());
+        Optional<Loan> optionalLoan = loanRepository.findById(loanId);
         if (!optionalLoan.isPresent()) {
             return new ResponseEntity<>("Préstamo no encontrado", HttpStatus.NOT_FOUND);
         }
         Loan loan = optionalLoan.get();
+
 
         // Verificar que el monto solicitado no exceda el monto máximo del préstamo
         if (loanApplicationDTO.getAmount() > loan.getMaxAmount()) {
@@ -74,6 +71,15 @@ public class LoanController {
         // Verificar que la cuenta de destino exista
         if (!verificarExistenciaCuentaDestino(loanApplicationDTO.getToAccountNumber())) {
             return new ResponseEntity<>("Cuenta de destino no existe", HttpStatus.BAD_REQUEST);
+        }
+
+        // Obtener el cliente autenticado
+        String currentEmail = authentication.getName();
+        Client currentClient = clientRepository.findByEmail(currentEmail);
+
+        // Verificar que el cliente esté autenticado
+        if (currentClient == null) {
+            return new ResponseEntity<>("Cliente no autenticado", HttpStatus.UNAUTHORIZED);
         }
 
         // Verificar que la cuenta de destino pertenezca al cliente autenticado
@@ -114,9 +120,6 @@ public class LoanController {
 
         // Guardar la transacción y actualizar la cuenta en la base de datos
         transactionRepository.save(loanTransactions);
-
-
-
 
         return new ResponseEntity<>("Solicitud de préstamo exitosa", HttpStatus.CREATED);
     }
