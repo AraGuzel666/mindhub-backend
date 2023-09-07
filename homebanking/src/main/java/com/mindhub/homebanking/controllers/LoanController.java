@@ -116,7 +116,10 @@ public class LoanController {
                 loan.getName() + " loan approved", time);
 
         // Actualizar el balance de la cuenta de destino
-        actualizarBalanceCuentaDestino(loanApplicationDTO.getToAccountNumber(), totalAmount);
+        //actualizarBalanceCuentaDestino(loanApplicationDTO.getToAccountNumber(), totalAmount);
+
+        Account destinationAccount = accountRepository.findByNumber(loanApplicationDTO.getToAccountNumber());
+        destinationAccount.addTransaction(loanTransactions);
 
         // Guardar la transacción y actualizar la cuenta en la base de datos
         transactionRepository.save(loanTransactions);
@@ -172,8 +175,6 @@ public class LoanController {
             return Collections.emptyList();
         }
     }
-
-
 }
 
 

@@ -61,7 +61,7 @@ Vue.createApp({
                 })
         },
         changedType: function () {
-            this.paymentsList = this.loanTypes.find(loanType => loanType.loanTypeId == this.loanTypeId).payments;
+            this.paymentsList = this.loanTypes.find(loanType => loanType.id == this.loanTypeId).payments;
         },
         finish: function () {
             window.location.reload();
