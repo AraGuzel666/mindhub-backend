@@ -165,7 +165,7 @@ public class LoanController {
         Client currentClient = clientRepository.findByEmail(currentEmail);
 
         if (currentClient != null) {
-            List<Loan> loans = loanRepository.findAll(); // Cambia esto según tu lógica de obtención de préstamos disponibles
+            List<Loan> loans = loanRepository.findAll();
             List<LoanDTO> loanDTOs = loans.stream()
                     .map(loan -> new LoanDTO(loan))
                     .collect(Collectors.toList());
