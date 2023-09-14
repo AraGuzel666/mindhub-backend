@@ -1,82 +1,95 @@
 package com.mindhub.homebanking.controllers;
 
-import com.mindhub.homebanking.dtos.TransactionDTO;
-import com.mindhub.homebanking.models.Account;
-import com.mindhub.homebanking.models.Client;
-import com.mindhub.homebanking.models.Transaction;
-import com.mindhub.homebanking.models.TransactionType;
+import com.mindhub.homebanking.models.*;
 import com.mindhub.homebanking.repositories.AccountRepository;
 import com.mindhub.homebanking.repositories.ClientRepository;
 import com.mindhub.homebanking.repositories.TransactionRepository;
+import com.mindhub.homebanking.services.AccountService;
+import com.mindhub.homebanking.services.ClientService;
+import com.mindhub.homebanking.services.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 
 @RestController
 @RequestMapping("/api")
+
 public class TransactionController {
+    @Autowired
+    private AccountService accountService;
+    @Autowired
+    private ClientService clientService;
+    @Autowired
+    private TransactionService transactionService;
 
-    @Autowired
-    private AccountRepository accountRepository;
-    @Autowired
-    private TransactionRepository transactionRepository;
-    @Autowired
-    private ClientRepository clientRepository;
 
-    @PostMapping("/transactions")
     @Transactional
-    public ResponseEntity<String> createTransaction(
-            @RequestParam double amount,
-            @RequestParam String description,
-            @RequestParam String fromAccountNumber,
-            @RequestParam String toAccountNumber,
-            Authentication authentication) {
+    @PostMapping("/transactions")
+    public ResponseEntity<Object> makeTransaction(Authentication authentication, @RequestParam String fromAccountNumber,
+                                                  @RequestParam String toAccountNumber,
+                                                  @RequestParam double amount,
+                                                  @RequestParam String description) {
 
-        LocalDateTime time = LocalDateTime.now();
-            // Verificar que los parámetros no estén vacíos
-        if (amount <= 0 || description.isEmpty() || fromAccountNumber.isEmpty() || toAccountNumber.isEmpty()) {
-            return new ResponseEntity<>("Parámetros inválidos", HttpStatus.BAD_REQUEST);
+        Client client = clientService.findByEmail(authentication.getName());
+        Set<Account> clientAccount = (client.getAccounts());
+        Account fromAccount = accountService.findByNumber(fromAccountNumber);
+        Account toAccount = accountService.findByNumber(toAccountNumber);
+
+        if (description.isBlank()) {
+            return new ResponseEntity<>("Description is empty", HttpStatus.FORBIDDEN);
+        }
+        if (fromAccountNumber.isBlank()) {
+            return new ResponseEntity<>("Account from number is empty", HttpStatus.FORBIDDEN);
+        }
+        if (toAccountNumber.isBlank()) {
+            return new ResponseEntity<>("Account to number is empty", HttpStatus.FORBIDDEN);
         }
         // Verificar que los números de cuenta no sean iguales
+
         if (fromAccountNumber.equals(toAccountNumber)) {
-            return new ResponseEntity<>("Cuenta de Origen y Cuenta de Destino no puede ser la misma", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("Account from and to numbers cannot be the same", HttpStatus.FORBIDDEN);
         }
-        // Obtener el cliente autenticado
-        String currentEmail = authentication.getName();
-        Client currentClient = clientRepository.findByEmail(currentEmail);
+        // Verificar si la cuenta de origen existe
 
-        // Verificar que la cuenta de origen exista y pertenezca al cliente autenticado
-        Account fromAccount = accountRepository.findByNumber(fromAccountNumber);
-        if (fromAccount == null || !fromAccount.getClient().equals(currentClient)) {
-            return new ResponseEntity<>("Cuenta de Origen inválida", HttpStatus.BAD_REQUEST);
+        if (fromAccountNumber == null) {
+            return new ResponseEntity<>("Account from number does not exist", HttpStatus.FORBIDDEN);
         }
+        // Verificar que la cuenta de origen pertenezca al cliente autenticado
 
-        // Verificar que la cuenta de destino exista
-        Account toAccount = accountRepository.findByNumber(toAccountNumber);
-        if (toAccount == null) {
-            return new ResponseEntity<>("Cuenta de Destino inválida", HttpStatus.BAD_REQUEST);
+        if (!clientAccount.stream().anyMatch(account -> account.getNumber().equals(fromAccountNumber))) {
+            return new ResponseEntity<>("Account from number does not belong to authenticated client", HttpStatus.FORBIDDEN);
         }
+        // Verificar si la cuenta de destino existe
 
-        // Verificar que la cuenta de origen tenga suficiente saldo
+        if (toAccountNumber == null) {
+            return new ResponseEntity<>("Account to number does not exist", HttpStatus.FORBIDDEN);
+        }
+        // Verificar que la cuenta de origen tenga saldo suficiente
+
+
         if (fromAccount.getBalance() < amount) {
-            return new ResponseEntity<>("Saldo insuficiente en la cuenta de origen", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("Insufficient balance in the account", HttpStatus.FORBIDDEN);
         }
+        if (amount < 0) {
+            return new ResponseEntity<>("Negative balances cannot be sent", HttpStatus.FORBIDDEN);
+        }
+        // Crear la transacción de débito asociada a la cuenta de origen
 
-        // Crear las transacciones (DEBIT y CREDIT)
-        Transaction debitTransaction = new Transaction(TransactionType.DEBIT, amount, fromAccount.getNumber() + " " + description, time);
-        Transaction creditTransaction = new Transaction(TransactionType.CREDIT, amount, toAccount.getNumber() + " " + description, time);
-
-
+        Transaction debitTransaction = new Transaction(TransactionType.DEBIT, -amount, description, LocalDateTime.now());
         fromAccount.addTransaction(debitTransaction);
+
+
+        // Crear la transacción de crédito asociada a la cuenta de destino
+        Transaction creditTransaction = new Transaction(TransactionType.CREDIT, amount, description, LocalDateTime.now());
         toAccount.addTransaction(creditTransaction);
 
 
@@ -84,28 +97,14 @@ public class TransactionController {
         fromAccount.setBalance(fromAccount.getBalance() - amount);
         toAccount.setBalance(toAccount.getBalance() + amount);
 
-        // Guardar las transacciones y actualizar las cuentas en la base de datos
-        transactionRepository.save(debitTransaction);
-        transactionRepository.save(creditTransaction);
-        accountRepository.save(fromAccount);
-        accountRepository.save(toAccount);
+        // Guardar los cambios en el repositorio de cuentas
+        transactionService.saveTransaction(debitTransaction);
+        transactionService.saveTransaction(creditTransaction);
+        accountService.saveAccount(fromAccount);
+        accountService.saveAccount(toAccount);
 
-        return new ResponseEntity<>("Transacción satisfactoria", HttpStatus.CREATED);
-    }
-    @GetMapping("/transactions")
-    public List<TransactionDTO> getAllTransactions(Authentication authentication) {
-        String currentEmail = authentication.getName();
-        Client currentClient = clientRepository.findByEmail(currentEmail);
 
-        if (currentClient != null) {
-            List<Account> accounts = accountRepository.findByClient(currentClient);
-            List<Transaction> transactions = transactionRepository.findByAccountIn(accounts);
+        return new ResponseEntity<>("Transaction completed successfully", HttpStatus.CREATED);
 
-            return transactions.stream().map(TransactionDTO::new).collect(Collectors.toList());
-        } else {
-            return Collections.emptyList();
-        }
     }
 }
-
-

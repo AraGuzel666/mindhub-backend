@@ -11,42 +11,41 @@ public class Card {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
     @GenericGenerator(name = "native", strategy = "native")
-    private Long id;
 
+    private Long id;
     private String cardHolder;
     private CardType type;
     private CardColor color;
     private String number;
-    private int cvv;
-    private LocalDateTime thruDate;
-    private LocalDateTime fromDate;
+    private Integer cvv;
+    private LocalDateTime fromDate = LocalDateTime.now();
+    private LocalDateTime thruDate = LocalDateTime.now();
+
+
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name="client_id")
+    @JoinColumn(name = "client_id")
     private Client client;
 
-    public Card() {}
+    public Card() {
+    }
 
-    public Card(String cardHolder, CardType type, CardColor color, String number, int cvv, LocalDateTime thruDate, LocalDateTime fromDate) {
+    public Card(String cardHolder, CardType type, CardColor color, String number, Integer cvv, LocalDateTime fromDate, LocalDateTime thruDate) {
         this.cardHolder = cardHolder;
         this.type = type;
         this.color = color;
         this.number = number;
         this.cvv = cvv;
-        this.thruDate = thruDate;
         this.fromDate = fromDate;
-    }
-
-    public Client getClient() {
-        return client;
-    }
-
-    public void setClient(Client client) {
+        this.thruDate = thruDate;
         this.client = client;
     }
+
+    //Getters and Setters
 
     public Long getId() {
         return id;
     }
+
 
     public String getCardHolder() {
         return cardHolder;
@@ -80,11 +79,11 @@ public class Card {
         this.number = number;
     }
 
-    public int getCvv() {
+    public Integer getCvv() {
         return cvv;
     }
 
-    public void setCvv(int cvv) {
+    public void setCvv(Integer cvv) {
         this.cvv = cvv;
     }
 
@@ -92,7 +91,7 @@ public class Card {
         return thruDate;
     }
 
-    public void setThruDate(LocalDateTime thruDate) {
+    public void setThruDateTime(LocalDateTime thruDate) {
         this.thruDate = thruDate;
     }
 
@@ -102,5 +101,13 @@ public class Card {
 
     public void setFromDate(LocalDateTime fromDate) {
         this.fromDate = fromDate;
+    }
+
+    public Client getClient() {
+        return client;
+    }
+
+    public void setClient(Client client) {
+        this.client = client;
     }
 }

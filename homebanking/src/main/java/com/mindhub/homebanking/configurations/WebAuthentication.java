@@ -3,6 +3,7 @@ package com.mindhub.homebanking.configurations;
 import com.mindhub.homebanking.models.Client;
 import com.mindhub.homebanking.repositories.ClientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -13,37 +14,39 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+
 @Configuration
 public class WebAuthentication extends GlobalAuthenticationConfigurerAdapter {
-    @Configuration
-    class WebSecurityConfiguration extends GlobalAuthenticationConfigurerAdapter {
+    @Autowired
+    ClientRepository clientRepository;
 
-        @Autowired
-        ClientRepository clientRepository;
+    @Override
 
-        @Override
-        public void init(AuthenticationManagerBuilder auth) throws Exception {
-            auth.userDetailsService(inputName -> {
-                if ("aram@aram.com".equals(inputName)) {
-                    return new User("aram@aram.com", passwordEncoder().encode("aram123"),
+    public void init(AuthenticationManagerBuilder auth) throws Exception {
+
+        auth.userDetailsService(inputName -> {
+
+            Client client = clientRepository.findByEmail(inputName);
+
+            if (client != null) {
+                if (client.getEmail().equalsIgnoreCase("admin@admin.com")) {
+                    return new User(client.getEmail(), client.getPassword(),
                             AuthorityUtils.createAuthorityList("ADMIN"));
                 } else {
-                    Client client = clientRepository.findByEmail(inputName);
-                    if (client != null) {
-                        return new User(client.getEmail(), client.getPassword(),
-                                AuthorityUtils.createAuthorityList("CLIENT"));
-                    } else {
-                        throw new UsernameNotFoundException("Unknown user: " + inputName);
-                    }
+                    return new User(client.getEmail(), client.getPassword(),
+                            AuthorityUtils.createAuthorityList("CLIENT"));
                 }
-            });
-        }
+            } else {
+                throw new UsernameNotFoundException("Unknown user: " + inputName);
+            }
+        });
+    }
 
 
-        @Bean
-        public PasswordEncoder passwordEncoder() {
-            return PasswordEncoderFactories.createDelegatingPasswordEncoder();
-        }
+   @Bean
+    public PasswordEncoder passwordEncoder() {
+        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
 }
+

@@ -1,5 +1,6 @@
 package com.mindhub.homebanking.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -8,28 +9,20 @@ import java.time.LocalDateTime;
 
 @Entity
 public class Transaction {
-
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
     @GenericGenerator(name = "native", strategy = "native")
-    private Long id;
 
+    private Long id;
     private TransactionType type;
     private Double amount;
     private String description;
-    private LocalDateTime date;
+    private LocalDateTime date = LocalDateTime.now();
+
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name="account_id")
+    @JoinColumn(name = "account_id")
     private Account account;
-
-    public Account getAccount() {
-        return account;
-    }
-
-    public void setAccount(Account account) {
-        this.account = account;
-    }
 
     public Transaction() {
     }
@@ -41,12 +34,19 @@ public class Transaction {
         this.date = date;
     }
 
+    //Getters and Setters
+
+
     public TransactionType getType() {
         return type;
     }
 
     public void setType(TransactionType type) {
         this.type = type;
+    }
+
+    public Long getId() {
+        return id;
     }
 
     public Double getAmount() {
@@ -69,12 +69,16 @@ public class Transaction {
         return date;
     }
 
+
     public void setDate(LocalDateTime date) {
         this.date = date;
     }
 
-    public Long getId() {
-        return id;
+    public Account getAccount() {
+        return account;
     }
 
+    public void setAccount(Account account) {
+        this.account = account;
+    }
 }

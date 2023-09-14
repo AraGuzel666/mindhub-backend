@@ -4,11 +4,14 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 public class Loan {
-
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
     @GenericGenerator(name = "native", strategy = "native")
@@ -16,14 +19,12 @@ public class Loan {
     private String name;
     private Double maxAmount;
     @ElementCollection
-    @CollectionTable(name = "loan_payments", joinColumns = @JoinColumn(name = "loan_id"))
     @Column(name = "payment")
-    private List<Integer> payments;
+    private List<Integer> payments = new ArrayList<>();
 
+    @OneToMany(mappedBy = "loan", fetch = FetchType.EAGER)
+    private Set<ClientLoan> clients = new HashSet<>();
 
-    @OneToMany(mappedBy = "loan", fetch=FetchType.EAGER)
-    @JsonIgnore
-    private List<ClientLoan> clientLoans;
 
     public Loan() {
     }
@@ -33,9 +34,13 @@ public class Loan {
         this.maxAmount = maxAmount;
         this.payments = payments;
     }
-    public List<ClientLoan> getClientLoans() {
-        return clientLoans;
+
+    public List<Client> getClients() {
+        return clients.stream().map(clientLoan -> clientLoan.getClient()).collect(Collectors.toList());
     }
+
+    //Getters and setters
+
 
     public Long getId() {
         return id;
@@ -65,7 +70,22 @@ public class Loan {
         this.payments = payments;
     }
 
-    public void setClientLoans(List<ClientLoan> clientLoans) {
-        this.clientLoans = clientLoans;
+    public Set<ClientLoan> getLoans() {
+        return clients;
+    }
+
+    public void setClientLoans(Set<ClientLoan> clientLoans) {
+        this.clients = clientLoans;
+
+    }
+
+    public void addClientLoan(ClientLoan clientLoan) {
+        clientLoan.setLoan(this);
+        clients.add(clientLoan);
     }
 }
+
+
+
+
+

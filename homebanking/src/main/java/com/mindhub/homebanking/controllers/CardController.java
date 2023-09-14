@@ -1,88 +1,81 @@
 package com.mindhub.homebanking.controllers;
 
-import com.mindhub.homebanking.models.Card;
-import com.mindhub.homebanking.models.CardColor;
-import com.mindhub.homebanking.models.CardType;
-import com.mindhub.homebanking.models.Client;
+import com.mindhub.homebanking.dtos.AccountDTO;
+import com.mindhub.homebanking.dtos.CardDTO;
+import com.mindhub.homebanking.dtos.ClientDTO;
+import com.mindhub.homebanking.models.*;
 import com.mindhub.homebanking.repositories.CardRepository;
 import com.mindhub.homebanking.repositories.ClientRepository;
+import com.mindhub.homebanking.services.CardService;
+import com.mindhub.homebanking.services.ClientService;
+import com.mindhub.homebanking.utils.CardUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.stream.Collectors;
-
 
 @RestController
 @RequestMapping("/api")
 public class CardController {
 
     @Autowired
-    private CardRepository cardRepository;
+    private ClientService clientService;
     @Autowired
-    private ClientRepository clientRepository;
+    private CardService cardService;
+
 
     @PostMapping("/clients/current/cards")
-    public ResponseEntity<String> createCard(
-            @RequestParam CardType cardType,
-            @RequestParam CardColor cardColor,
-            Authentication authentication
-    ) {
-        String clientEmail = authentication.getName();
-        Client client = clientRepository.findByEmail(clientEmail);
+    public ResponseEntity<Object> createCard(Authentication authentication, @RequestParam CardType cardType, @RequestParam CardColor cardColor) {
+        Client client = clientService.findByEmail(authentication.getName());
 
-        if (client == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Cliente no encontrado");
+        if (cardType == null || cardColor == null) {
+            return new ResponseEntity<>("Missing data", HttpStatus.NO_CONTENT);
         }
 
-        List<Card> existingCards = client.getCards().stream()
-                .filter(card -> card.getType() == cardType)
-                .collect(Collectors.toList());
+        //client.getCards() me trae solo las tarjetas del cliente autenticado, si quisiera el Objeto deberia usar el repositorio
+        Set<Card> cards = client.getCards();
 
-        if (existingCards.size() >= 3) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Prohibido: El cliente ya tiene 3 tarjetas creadas del tipo especificado");
-        }
+        int cardLimit;
+        if (cardType == CardType.CREDIT || cardType == CardType.DEBIT) {
+            cardLimit = 3;
 
-        Card newCard = new Card();
-        newCard.setColor(cardColor);
-        newCard.setType(cardType);
-        newCard.setNumber(generateCardNumber());
-        newCard.setCardHolder(client.getFirstName() + " " + client.getLastName());
-        newCard.setCvv(generateRandomCvv());
-        newCard.setFromDate(LocalDateTime.now());
-        newCard.setThruDate(LocalDateTime.now().plusYears(5));
-        newCard.setClient(client);
-
-        cardRepository.save(newCard);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body("Tarjeta creada exitosamente");
-    }
-
-    private String generateCardNumber() {
-        Random random = new Random();
-        StringBuilder cardNumber = new StringBuilder();
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
-                cardNumber.append(random.nextInt(10));
+            long cardsSameType = cards.stream()
+                    .filter(newCard -> newCard.getType() == cardType)
+                    .count();
+            if (cardsSameType >= cardLimit) {
+                return new ResponseEntity<>("Max amount of card reached", HttpStatus.FORBIDDEN);
             }
-            if (i < 3) {
-                cardNumber.append("-");
+            boolean colorUsed = cards.stream()
+                    .anyMatch(card -> card.getType() == cardType && card.getColor() == cardColor);
+            if (colorUsed) {
+                return new ResponseEntity<>("Color already used", HttpStatus.FORBIDDEN);
             }
         }
-        return cardNumber.toString();
+        // Generar número de tarjeta aleatorio y único
+
+        String randomCardNumber;
+        do {
+            randomCardNumber = CardUtils.getCardNumber();
+        } while (cardService.findCardByNumber(randomCardNumber) != null);
+        int randomCvvNumber = CardUtils.getRandomCvvNumber();
+
+
+        Card card = new Card(client.getFirstName(), cardType, cardColor, randomCardNumber, randomCvvNumber, LocalDateTime.now(), LocalDateTime.now().plusYears(5));
+        client.addCard(card);
+        cardService.saveCard(card);
+        return new ResponseEntity<>("Account created succesfully", HttpStatus.CREATED);
     }
 
-    private int generateRandomCvv() {
-        return new Random().nextInt(1000);
-    }
+
+
+
 }
+

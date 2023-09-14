@@ -1,35 +1,44 @@
 package com.mindhub.homebanking.dtos;
 
-
-
-import com.mindhub.homebanking.models.Card;
 import com.mindhub.homebanking.models.Client;
+import com.mindhub.homebanking.models.ClientLoan;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static java.util.stream.Collectors.toSet;
-
 public class ClientDTO {
-
     private Long id;
     private String firstName;
     private String lastName;
     private String email;
-    private Set<AccountDTO> accounts;
-    private Set<ClientLoanDTO> loans;
-    private Set<CardDTO> cards;
-    public ClientDTO(Client client){
-        this.id = client.getId();
-        this.firstName = client.getFirstName();
-        this.lastName = client.getLastName();
-        this.email = client.getEmail();
-        this.accounts = client.getAccount().stream().map(AccountDTO::new).collect(toSet());
-        this.loans = client.getClientLoans().stream().map(ClientLoanDTO::new).collect(toSet());
-        this.cards = client.getCards().stream().map(CardDTO::new).collect(toSet());
+
+    private Set<AccountDTO> accounts = new HashSet<>();
+    private Set<ClientLoanDTO> loans = new HashSet<>();
+    private Set<CardDTO> cards = new HashSet<>();
+
+    public ClientDTO(Client client) {
+        id = client.getId();
+        firstName = client.getFirstName();
+        lastName = client.getLastName();
+        email = client.getEmail();
+
+        accounts = client.getAccounts()
+                .stream()
+                .map(account -> new AccountDTO(account))
+                .collect(Collectors.toSet());
+
+        loans = client.getClientLoans()
+                .stream()
+                .map(loan -> new ClientLoanDTO(loan))
+                .collect(Collectors.toSet());
+        cards = client.getCards()
+                .stream()
+                .map(card -> new CardDTO(card))
+                .collect(Collectors.toSet());
+
     }
+
 
     public Long getId() {
         return id;

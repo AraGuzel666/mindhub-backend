@@ -1,16 +1,15 @@
 package com.mindhub.homebanking.models;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 public class Client {
-
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
     @GenericGenerator(name = "native", strategy = "native")
@@ -19,53 +18,36 @@ public class Client {
     private String lastName;
     private String email;
     private String password;
-    @OneToMany(mappedBy="client", fetch=FetchType.EAGER)
-    Set<Account> accounts = new HashSet<>();
 
-    @OneToMany(mappedBy="client", fetch=FetchType.EAGER)
-    Set<Card> cards = new HashSet<>();
-    @OneToMany(mappedBy="client", fetch=FetchType.LAZY)
-    private List<ClientLoan> clientLoans;
+    @OneToMany(mappedBy = "client", fetch = FetchType.EAGER)
+    private Set<Account> accounts = new HashSet<>();
+
+    @OneToMany(mappedBy = "client", fetch = FetchType.EAGER)
+    private Set<ClientLoan> clientLoans = new HashSet<>();
+
+    @OneToMany(mappedBy = "client", fetch = FetchType.EAGER)
+    private Set<Card> cards = new HashSet<>();
 
     public Client() {
-
     }
 
-    public Set<Card> getCards() {
-        return cards;
-    }
-
-    public void addCards(Card card) {
-        card.setClient(this);
-        cards.add(card);
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public List<ClientLoan> getClientLoans() {
-        return clientLoans;
-    }
-
-    public Set<Account> getAccount() {
-        return accounts;
-    }
-
-    public void addAccount(Account account){
-        account.setClient(this);
-        accounts.add(account);
-    }
-
-    public Client(String email, String name, String lastname, String password) {
+    public Client(String firstName, String lastName, String email, String password) {
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.email = email;
-        this.firstName = name;
-        this.lastName = lastname;
         this.password = password;
+    }
+
+    public List<Loan> getLoans() {
+        return clientLoans.stream().map(clientLoan -> clientLoan.getLoan()).collect(Collectors.toList());
+    }
+
+
+    //Getters and Setters
+
+
+    public Long getId() {
+        return id;
     }
 
     public String getFirstName() {
@@ -84,10 +66,6 @@ public class Client {
         this.lastName = lastName;
     }
 
-    public Long getId() {
-        return id;
-    }
-
     public String getEmail() {
         return email;
     }
@@ -95,4 +73,53 @@ public class Client {
     public void setEmail(String email) {
         this.email = email;
     }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public Set<Account> getAccounts() {
+        return accounts;
+    }
+
+    public void addAccount(Account account) {
+        account.setClient(this);
+        accounts.add(account);
+    }
+
+    public Set<ClientLoan> getClientLoans() {
+        return clientLoans;
+    }
+
+    public void addClientLoan(ClientLoan clientLoan) {
+        clientLoan.setClient(this);
+        clientLoans.add(clientLoan);
+    }
+
+    public Set<Card> getCards() {
+        return cards;
+    }
+
+    public void addCard(Card card) {
+        card.setClient(this);
+        cards.add(card);
+    }
+
+    public void setAccounts(Set<Account> accounts) {
+        this.accounts = accounts;
+    }
+
+    public void setClientLoans(Set<ClientLoan> clientLoans) {
+        this.clientLoans = clientLoans;
+    }
+
+    public void setCards(Set<Card> cards) {
+        this.cards = cards;
+    }
 }
+
+
